@@ -1,0 +1,21 @@
+/* some style */
+
+img {
+    max-height: 200px;
+    max-width: 200px;
+}
+
+.inline {
+    display: inline;
+    border: 1px solid black;
+    float: left;
+}
+
+.center {
+    text-align: center;
+}
+
+.tiny-font {
+    font-size: 8px;
+}
+
