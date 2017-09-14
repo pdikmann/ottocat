@@ -20,7 +20,7 @@ img {
     font-size: 8px;
 }
 
-.shuffler {
+.randomizer, .sequencer {
     text-align: center;
 }
 

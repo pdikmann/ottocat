@@ -1,5 +1,6 @@
 (ns otto-cat2.core
-    (:require [reagent.core :as reagent :refer [atom]]))
+  (:require [reagent.core :as reagent :refer [atom]]
+            [goog.dom :as dom]))
 
 ;; (enable-console-print!)
 
@@ -15,7 +16,7 @@
 (defn random-img []
   (let [base-url "https://i.otto.de/i/otto/"
         size-param "?w=200&h=200"
-        lower-limit 10000000
+        lower-limit 9992000
         upper-limit 30000000
         random-int (+ (.floor js/Math
                                (* (.random js/Math)
@@ -38,11 +39,6 @@
          assoc :objs
          (vec (map #(add-index (random-img) %)
                    (range 32)))))
-
-(defn click-to-randomize []
-  [:div.shuffler
-   [:a {:href "#" :on-click #'randomize-all-img}
-    "shuffle"]])
 
 (defn specific-img [num]
   (let [base-url "https://i.otto.de/i/otto/"
@@ -75,23 +71,58 @@
          assoc :objs
          [(add-index (specific-img n) 0)]))
 
-(defn sequence-start []
-  (js/parseInt (.-value (.getElementById js/document "sequence-start"))))
+(defn sequence-previous [n]
+  (let [prev (- n 32)]
+    (dom/setProperties
+     (dom/getElement "input-number")
+     (clj->js {:value prev}))
+    (sequence-all-img prev)))
 
-(defn click-to-sequence []
-  (let [num (atom "hey")]
-    (fn []
-      [:div.sequencer
-       [:input {:id "sequence-start"
-                :type "number"
-                :min 10000000
-                :max 20000000}]
-       [:a {:href "#"
-            :on-click #(sequence-all-img (sequence-start))}
-        "start sequence"]])))
+(defn sequence-next [n]
+  (let [next (+ n 32)]
+    (dom/setProperties
+     (dom/getElement "input-number")
+     (clj->js {:value next}))
+    (sequence-all-img next)))
+
+(defn sequence-centered [n]
+  (let [start (- n 16)]
+    (dom/setProperties
+     (dom/getElement "input-number")
+     (clj->js {:value start}))
+    (sequence-all-img start)))
+
+(defn input-number []
+  (.-valueAsNumber (dom/getElement "input-number")))
 
 ;; --------------------------------------------------------------------------------
 ;; react components
+(defn click-to-randomize []
+  [:div.randomizer
+   [:a {:href "#" :on-click #'randomize-all-img}
+    "randomize"]])
+
+(defn click-to-sequence []
+  (let [num (atom "0")]
+    (fn []
+      [:div.sequencer
+       [:button {:on-click #(sequence-previous (input-number))} "<<"]
+       [:input {:id "input-number"
+                :type "number"
+                :min 9992000
+                :max 30000000}]
+       [:button {:on-click #(sequence-next (input-number))} ">>"]
+       [:br]
+       [:a {:href "#"
+            :on-click #(sequence-all-img (input-number))}
+        "sequence"]])))
+
+(defn image-number [img]
+  [:a {:href "#"
+       :on-click #(sequence-centered (:n img))}
+   [:p {:class "tiny-font center"}
+    (:n img)]])
+
 (defn sequence-img [img]
   [:div.frame
    [:a {:href (:big img) :target "_blank"}
@@ -102,8 +133,7 @@
            :on-error #(replace-seq-img img)
            }]]
    [:br]
-   [:p {:class "tiny-font center"}
-    (:n img)]])
+   [image-number img]])
 
 (defn auto-reloading-img [img]
   [:div.frame
@@ -114,20 +144,20 @@
            :on-error #(randomize-img (:i img))
            }]]
    [:br]
-   [:p {:class "tiny-font center"}
-    (:n img)]])
+   [image-number img]])
 
 (defn catalogue []
   [:div
    [click-to-randomize]
    [click-to-sequence]
    [:hr]
-   (for [img (:objs @app-state)]
-     ^{:key (:n img)}
-     (if (:random img)
-       [auto-reloading-img img]
-       [sequence-img img])
-     )
+   (doall
+    (for [img (:objs @app-state)]
+      ^{:key (:n img)}
+      (if (:random img)
+        [auto-reloading-img img]
+        [sequence-img img])
+      ))
    [:hr]
    [click-to-randomize]
    ])
