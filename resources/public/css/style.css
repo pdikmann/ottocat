@@ -5,10 +5,11 @@ img {
     max-width: 200px;
 }
 
-.inline {
+.frame {
     display: inline;
     border: 1px solid black;
     float: left;
+    height: 240px;
 }
 
 .center {
